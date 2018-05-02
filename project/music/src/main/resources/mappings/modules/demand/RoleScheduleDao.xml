@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.demand.dao.RoleScheduleDao">
+    
+	<sql id="roleScheduleColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.start_time AS "startTime",
+		a.stop_time AS "stopTime",
+		a.detail_id AS "role.id",
+		b.category_detail AS "role.categoryDetail"
+	</sql>
+	
+	<sql id="roleScheduleJoins">
+		LEFT JOIN b_demand_detail b ON b.id = a.detail_id
+	</sql>
+	
+    
+	<select id="get" resultType="RoleSchedule" >
+		SELECT 
+			<include refid="roleScheduleColumns"/>
+		FROM b_role_schedule a
+		<include refid="roleScheduleJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="RoleSchedule" >
+		SELECT 
+			<include refid="roleScheduleColumns"/>
+		FROM b_role_schedule a
+		<include refid="roleScheduleJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="role != null and role.id != null and role.id != ''">
+				AND a.detail_id = #{role.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="RoleSchedule" >
+		SELECT 
+			<include refid="roleScheduleColumns"/>
+		FROM b_role_schedule a
+		<include refid="roleScheduleJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO b_role_schedule(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			start_time,
+			stop_time,
+			detail_id
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{startTime},
+			#{stopTime},
+			#{role.id}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_role_schedule SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			start_time = #{startTime},
+			stop_time = #{stopTime},
+			detail_id = #{role.id}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_role_schedule
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE detail_id = #{role.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_role_schedule SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE detail_id = #{role.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="RoleSchedule" statementType="STATEMENT">
+		select * FROM b_role_schedule  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListByrole" resultType="DemandDetail">
+		SELECT 
+			*
+		FROM b_demand_detail a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="categoryDetail != null and categoryDetail != ''">
+				AND a.categoryDetail LIKE 
+				<if test="dbName == 'oracle'">#{categoryDetail}||'%'</if>
+				<if test="dbName == 'mssql'">#{categoryDetail}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{categoryDetail},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

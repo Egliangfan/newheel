@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.sysuserinfo.dao.SysUserInfoDao">
+    
+	<sql id="sysUserInfoColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.user_id AS "tuser.id",
+		a.project_category AS "projectCategory",
+		a.mobile AS "mobile",
+		a.linkman AS "linkman",
+		a.service_address AS "serviceAddress",
+		a.service_region AS "serviceRegion",
+		a.logo AS "logo",
+		a.introduction AS "introducion",
+		a.price_range AS "priceRange",
+		a.remarks AS "remarks",
+		tuser.name AS "tuser.name"
+	</sql>
+	
+	<sql id="sysUserInfoJoins">
+		LEFT JOIN sys_user tuser ON tuser.id = a.user_id
+	</sql>
+	
+    <resultMap type="SysUserInfo" id="SysUserInfoResult" autoMapping="true">
+    	<result column="logo" property="logo"   typeHandler="com.jeeplus.common.mapper.ConvertBlobTypeHandler"/>
+    </resultMap>
+    
+	<select id="get" resultMap="SysUserInfoResult" >
+		SELECT 
+			<include refid="sysUserInfoColumns"/>
+		FROM sys_user_info a
+		<include refid="sysUserInfoJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultMap="SysUserInfoResult" >
+		SELECT 
+			<include refid="sysUserInfoColumns"/>
+		FROM sys_user_info a
+		<include refid="sysUserInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="tuser != null and tuser.id != null and tuser.id != ''">
+				AND a.user_id LIKE 
+					<if test="dbName == 'oracle'">'%'||#{tuser.id}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{tuser.id}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{tuser.id},'%')</if>
+			</if>
+			<if test="projectCategory != null and projectCategory != ''">
+				AND a.project_category LIKE 
+					<if test="dbName == 'oracle'">'%'||#{projectCategory}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{projectCategory}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{projectCategory},'%')</if>
+			</if>
+			<if test="linkman != null and linkman != ''">
+				AND a.linkman LIKE 
+					<if test="dbName == 'oracle'">'%'||#{linkman}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{linkman}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{linkman},'%')</if>
+			</if>
+			<if test="serviceRegion != null and serviceRegion != ''">
+				AND a.service_region LIKE 
+					<if test="dbName == 'oracle'">'%'||#{serviceRegion}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{serviceRegion}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{serviceRegion},'%')</if>
+			</if>
+			<if test="priceRange != null and priceRange != ''">
+				AND a.price_range LIKE 
+					<if test="dbName == 'oracle'">'%'||#{priceRange}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{priceRange}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{priceRange},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultMap="SysUserInfoResult" >
+		SELECT 
+			<include refid="sysUserInfoColumns"/>
+		FROM sys_user_info a
+		<include refid="sysUserInfoJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO sys_user_info(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			user_id,
+			project_category,
+			mobile,
+			linkman,
+			service_address,
+			service_region,
+			logo,
+			introduction,
+			price_range,
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{tuser.id},
+			#{projectCategory},
+			#{mobile},
+			#{linkman},
+			#{serviceAddress},
+			#{serviceRegion},
+			#{logo},
+			#{introducion},
+			#{priceRange},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE sys_user_info SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			user_id = #{tuser.id},
+			project_category = #{projectCategory},
+			mobile = #{mobile},
+			linkman = #{linkman},
+			service_address = #{serviceAddress},
+			service_region = #{serviceRegion},
+			logo = #{logo},
+			introduction = #{introducion},
+			price_range = #{priceRange},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM sys_user_info
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE sys_user_info SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="SysUserInfo" statementType="STATEMENT">
+		select * FROM sys_user_info  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

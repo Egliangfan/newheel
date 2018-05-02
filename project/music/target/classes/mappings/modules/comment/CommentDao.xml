@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.comment.dao.CommentDao">
+    
+	<sql id="commentColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.name",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		a.demanddetail_id AS "demanddetail.id",
+		a.comment AS "comment",
+		a.comment_rank AS "commentRank"
+	</sql>
+	
+	<sql id="commentJoins">
+		LEFT JOIN b_demand_detail demanddetail ON demanddetail.id = a.demanddetail_id
+	</sql>
+	
+    
+	<select id="get" resultType="Comment" >
+		SELECT 
+			<include refid="commentColumns"/>
+		FROM b_comment a
+		<include refid="commentJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="Comment" >
+		SELECT 
+			<include refid="commentColumns"/>
+		FROM b_comment a
+		<include refid="commentJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="createBy != null and createBy.name != null and createBy.name != ''">
+				AND a.create_by = #{createBy.name}
+			</if>
+			<if test="createDate != null and createDate != ''">
+				AND a.create_date = #{createDate}
+			</if>
+			<if test="demanddetail != null and demanddetail.id != null and demanddetail.id != ''">
+				AND a.demanddetail_id = #{demanddetail.id}
+			</if>
+			<if test="comment != null and comment != ''">
+				AND a.comment = #{comment}
+			</if>
+			<if test="commentRank != null and commentRank != ''">
+				AND a.comment_rank = #{commentRank}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Comment" >
+		SELECT 
+			<include refid="commentColumns"/>
+		FROM b_comment a
+		<include refid="commentJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO b_comment(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			demanddetail_id,
+			comment,
+			comment_rank
+		) VALUES (
+			#{id},
+			#{createBy.name},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{demanddetail.id},
+			#{comment},
+			#{commentRank}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_comment SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			demanddetail_id = #{demanddetail.id},
+			comment = #{comment},
+			comment_rank = #{commentRank}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_comment
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_comment SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Comment" statementType="STATEMENT">
+		select * FROM b_comment  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListBydemanddetail" resultType="DemandDetail">
+		SELECT 
+			*
+		FROM b_demand_detail a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="id != null and id != ''">
+				AND a.id LIKE 
+				<if test="dbName == 'oracle'">#{id}||'%'</if>
+				<if test="dbName == 'mssql'">#{id}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{id},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

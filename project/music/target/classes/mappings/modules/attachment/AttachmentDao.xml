@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.attachment.dao.AttachmentDao">
+    
+	<sql id="attachmentColumns">
+		a.id AS "id",
+		a.userid AS "userid",
+		a.creat_date AS "creatDate",
+		a.audit_type AS "auditType",
+		a.file_path AS "filePath",
+		a.file_type AS "fileType",
+		a.file_size AS "fileSize",
+		a.filename AS "filename",
+		a.title AS "title"
+	</sql>
+	
+	<sql id="attachmentJoins">
+	</sql>
+	
+    
+	<select id="get" resultType="Attachment" >
+		SELECT 
+			<include refid="attachmentColumns"/>
+		FROM b_attachment a
+		<include refid="attachmentJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="Attachment" >
+		SELECT 
+			<include refid="attachmentColumns"/>
+		FROM b_attachment a
+		<include refid="attachmentJoins"/>
+		<where>
+			
+			<if test="userid != null and userid != ''">
+				AND a.userid = #{userid}
+			</if>
+			<if test="creatDate != null and creatDate != ''">
+				AND a.creat_date = #{creatDate}
+			</if>
+			<if test="auditType != null and auditType != ''">
+				AND a.audit_type = #{auditType}
+			</if>
+			<if test="fileType != null and fileType != ''">
+				AND a.file_type = #{fileType}
+			</if>
+			<if test="filename != null and filename != ''">
+				AND a.filename = #{filename}
+			</if>
+			<if test="title != null and title != ''">
+				AND a.title LIKE 
+					<if test="dbName == 'oracle'">'%'||#{title}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{title}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{title},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Attachment" >
+		SELECT 
+			<include refid="attachmentColumns"/>
+		FROM b_attachment a
+		<include refid="attachmentJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO b_attachment(
+			id,
+			userid,
+			creat_date,
+			audit_type,
+			file_path,
+			file_type,
+			file_size,
+			filename,
+			title
+		) VALUES (
+			#{id},
+			#{userid},
+			#{creatDate},
+			#{auditType},
+			#{filePath},
+			#{fileType},
+			#{fileSize},
+			#{filename},
+			#{title}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_attachment SET 	
+			userid = #{userid},
+			creat_date = #{creatDate},
+			audit_type = #{auditType},
+			file_path = #{filePath},
+			file_type = #{fileType},
+			file_size = #{fileSize},
+			filename = #{filename},
+			title = #{title}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_attachment
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_attachment SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="Attachment" statementType="STATEMENT">
+		select * FROM b_attachment  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>

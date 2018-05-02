@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.demand.dao.DemandDetailDao">
+    
+	<sql id="demandDetailColumns">
+		a.id AS "id",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.demand_id AS "demand.id",
+		a.category_id AS "category.id",
+		a.category_detail AS "categoryDetail",
+		a.quantity AS "quantity",
+		a.status AS "status",
+		a.remarks AS "remarks",
+		b.name AS "demand.name",
+		classfy.name AS "category.name"
+	</sql>
+	
+	<sql id="demandDetailJoins">
+		LEFT JOIN b_demand b ON b.id = a.demand_id
+		LEFT JOIN b_demand demand ON demand.id = a.demand_id
+		LEFT JOIN b_column_classfy classfy ON classfy.id = a.category_id
+	</sql>
+	
+    
+	<select id="get" resultType="DemandDetail" >
+		SELECT 
+			<include refid="demandDetailColumns"/>
+		FROM b_demand_detail a
+		<include refid="demandDetailJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="DemandDetail" >
+		SELECT 
+			<include refid="demandDetailColumns"/>
+		FROM b_demand_detail a
+		<include refid="demandDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="demand != null and demand.id != null and demand.id != ''">
+				AND a.demand_id = #{demand.id}
+			</if>
+			<if test="category != null and category.id != null and category.id != ''">
+				AND a.category_id = #{category.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DemandDetail" >
+		SELECT 
+			<include refid="demandDetailColumns"/>
+		FROM b_demand_detail a
+		<include refid="demandDetailJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.create_date ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO b_demand_detail(
+			id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			del_flag,
+			demand_id,
+			category_id,
+			category_detail,
+			quantity,
+			status,
+			remarks
+		) VALUES (
+			#{id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{demand.id},
+			#{category.id},
+			#{categoryDetail},
+			#{quantity},
+			#{status},
+			#{remarks}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_demand_detail SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			demand_id = #{demand.id},
+			category_id = #{category.id},
+			category_detail = #{categoryDetail},
+			quantity = #{quantity},
+			status = #{status},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_demand_detail
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE demand_id = #{demand.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_demand_detail SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		<choose>
+			<when test="id !=null and id != ''">
+				WHERE id = #{id}
+			</when>
+			<otherwise>
+				WHERE demand_id = #{demand.id}
+			</otherwise>
+		</choose>
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="DemandDetail" statementType="STATEMENT">
+		select * FROM b_demand_detail  where ${propertyName} = '${value}'
+	</select>
+	
+	<select id="findListBydemand" resultType="Demand">
+		SELECT 
+			*
+		FROM b_demand a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+				<if test="dbName == 'oracle'">#{name}||'%'</if>
+				<if test="dbName == 'mssql'">#{name}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{name},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	<select id="findListBycategory" resultType="ColumnClassfy">
+		SELECT 
+			*
+		FROM b_column_classfy a
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+				<if test="dbName == 'oracle'">#{name}||'%'</if>
+				<if test="dbName == 'mssql'">#{name}+'%'</if>
+				<if test="dbName == 'mysql'">concat(#{name},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

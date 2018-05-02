@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeeplus.modules.massmassage.dao.MassMessageDao">
+    
+	<sql id="massMessageColumns">
+		a.id AS "id",
+		a.senddate AS "senddate",
+		a.content AS "content",
+		a.sender AS "sender",
+		a.title AS "title",
+		a.week AS "week"
+	</sql>
+	
+	<sql id="massMessageJoins">
+	</sql>
+	
+    <resultMap type="MassMessage" id="MassMessageResult" autoMapping="true">
+    	<result column="content" property="content"   typeHandler="com.jeeplus.common.mapper.ConvertBlobTypeHandler"/>
+    </resultMap>
+    
+	<select id="get" resultMap="MassMessageResult" >
+		SELECT 
+			<include refid="massMessageColumns"/>
+		FROM b_mass_message a
+		<include refid="massMessageJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultMap="MassMessageResult" >
+		SELECT 
+			<include refid="massMessageColumns"/>
+		FROM b_mass_message a
+		<include refid="massMessageJoins"/>
+		<where>
+			
+			<if test="senddate != null and senddate != ''">
+				AND a.senddate = #{senddate}
+			</if>
+			<if test="content != null and content != ''">
+				AND a.content = #{content}
+			</if>
+			<if test="sender != null and sender != ''">
+				AND a.sender = #{sender}
+			</if>
+			<if test="title != null and title != ''">
+				AND a.title LIKE 
+					<if test="dbName == 'oracle'">'%'||#{title}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{title}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{title},'%')</if>
+			</if>
+			<if test="week != null and week != ''">
+				AND a.week = #{week}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultMap="MassMessageResult" >
+		SELECT 
+			<include refid="massMessageColumns"/>
+		FROM b_mass_message a
+		<include refid="massMessageJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO b_mass_message(
+			id,
+			senddate,
+			content,
+			sender,
+			title,
+			week
+		) VALUES (
+			#{id},
+			#{senddate},
+			#{content},
+			#{sender},
+			#{title},
+			#{week}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE b_mass_message SET 	
+			senddate = #{senddate},
+			content = #{content},
+			sender = #{sender},
+			title = #{title},
+			week = #{week}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!--物理删除-->
+	<update id="delete">
+		DELETE FROM b_mass_message
+		WHERE id = #{id}
+	</update>
+	
+	<!--逻辑删除-->
+	<update id="deleteByLogic">
+		UPDATE b_mass_message SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	
+	<!-- 根据实体名称和字段名称和字段值获取唯一记录 -->
+	<select id="findUniqueByProperty" resultType="MassMessage" statementType="STATEMENT">
+		select * FROM b_mass_message  where ${propertyName} = '${value}'
+	</select>
+	
+</mapper>
